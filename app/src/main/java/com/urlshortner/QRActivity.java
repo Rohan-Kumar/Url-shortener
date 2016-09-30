@@ -8,9 +8,11 @@ import android.os.Environment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.zxing.BarcodeFormat;
@@ -26,6 +28,7 @@ import java.io.IOException;
 public class QRActivity extends AppCompatActivity {
 
     ImageView qrImage;
+    TextView urlText;
     String shortUrl;
     Bitmap bmp;
 
@@ -35,9 +38,12 @@ public class QRActivity extends AppCompatActivity {
         setContentView(R.layout.activity_qr);
 
         qrImage = (ImageView) findViewById(R.id.qr);
+        urlText = (TextView) findViewById(R.id.urlText);
 
         Intent intent = getIntent();
         shortUrl = intent.getStringExtra("shortUrl");
+
+        urlText.setText(Html.fromHtml("<u><font color=\"#00C9FF\">" + shortUrl + "</font></u>"));
 
         QRCodeWriter writer = new QRCodeWriter();
         try {

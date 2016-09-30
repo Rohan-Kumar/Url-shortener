@@ -21,14 +21,14 @@ import java.net.URL;
 /**
  * Created by Rohan on 8/25/2016.
  */
-public class GetShortUrl extends AsyncTask<Void, Void, Void> {
+public class GoogleShortUrl extends AsyncTask<Void, Void, Void> {
 
     private static final String TAG = "UrlShortner";
     String Response = "";
     String longUrl = "";
     String shortUrl = "";
 
-    GetShortUrl(String url) {
+    GoogleShortUrl(String url) {
         longUrl = url;
 
     }

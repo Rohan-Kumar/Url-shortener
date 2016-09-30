@@ -19,7 +19,7 @@ import android.text.Html;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity
 
     EditText longUrl;
     static TextView shortUrlTV;
-    static ImageView copy, share;
+    static LinearLayout copy, share, qr;
     static CardView card;
     static SQLiteDatabase db;
 
@@ -84,15 +84,26 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+
+        qr.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, QRActivity.class);
+                intent.putExtra("shortUrl", shortUrlTV.getText().toString());
+                startActivity(intent);
+            }
+        });
     }
 
     private void init() {
         longUrl = (EditText) findViewById(R.id.LongUrl);
         shortUrlTV = (TextView) findViewById(R.id.ShortUrl);
-        copy = (ImageView) findViewById(R.id.copy);
-        share = (ImageView) findViewById(R.id.share);
+        copy = (LinearLayout) findViewById(R.id.copy);
+        share = (LinearLayout) findViewById(R.id.share);
+        qr = (LinearLayout) findViewById(R.id.qr);
         card = (CardView) findViewById(R.id.card);
         card.setVisibility(View.INVISIBLE);
+
 
         db = openOrCreateDatabase("UrlShortener", MODE_PRIVATE, null);
         db.execSQL("CREATE TABLE IF NOT EXISTS url(URL VARCHAR);");
@@ -118,13 +129,6 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_history) {
             Intent intent = new Intent(MainActivity.this, HistoryActivity.class);
             startActivity(intent);
-        } else if (id == R.id.nav_qr) {
-            if (card.getVisibility() == View.VISIBLE) {
-                Intent intent = new Intent(MainActivity.this, QRActivity.class);
-                intent.putExtra("shortUrl", shortUrlTV.getText().toString());
-                startActivity(intent);
-            } else
-                Toast.makeText(MainActivity.this, "Please enter a url first to generate a qr!", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_share) {
             Intent sendIntent = new Intent();
             sendIntent.setAction(Intent.ACTION_SEND);
@@ -161,7 +165,7 @@ public class MainActivity extends AppCompatActivity
             longUrl.requestFocus();
             card.setVisibility(View.INVISIBLE);
         } else {
-            new GetShortUrl(urlText).execute();
+            new GoogleShortUrl(urlText).execute();
         }
     }
 
