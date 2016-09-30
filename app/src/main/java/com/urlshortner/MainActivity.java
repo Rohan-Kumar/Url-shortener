@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -12,6 +13,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity
     static LinearLayout copy, share, qr;
     static CardView card;
     static SQLiteDatabase db;
+    private String[] api = {"Google url shortener","Bitly url shortener","Tiny url shortener"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,7 +131,18 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_history) {
             Intent intent = new Intent(MainActivity.this, HistoryActivity.class);
             startActivity(intent);
-        } else if (id == R.id.nav_share) {
+        }else if (id == R.id.default_api){
+            AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+            alert.setSingleChoiceItems(api, getSharedPreferences("URL",Context.MODE_PRIVATE).getInt("api",0), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    getSharedPreferences("URL",Context.MODE_PRIVATE).edit().putInt("api",which).apply();
+                    dialog.dismiss();
+                }
+            });
+            alert.setTitle("Select shortener method");
+            alert.show();
+        }else if (id == R.id.nav_share) {
             Intent sendIntent = new Intent();
             sendIntent.setAction(Intent.ACTION_SEND);
             sendIntent.putExtra(Intent.EXTRA_TEXT, "Hello!\nCheck this amazing app to shorten your url!\nDownload it at http://play.google.com/store/apps/details?id=" + getBaseContext().getPackageName());
@@ -167,7 +181,20 @@ public class MainActivity extends AppCompatActivity
             urlText = urlText.replaceAll(" ","");
             if (!urlText.startsWith("http"))
                 urlText = "http://" + urlText;
-            new TinyurlShortUrl(urlText).execute();
+            int which = getSharedPreferences("URL",Context.MODE_PRIVATE).getInt("api",0);
+            switch (which){
+                case 0:
+                    new GoogleShortUrl(urlText,MainActivity.this).execute();
+                    break;
+                case 1:
+                    new BitlyShortUrl(urlText,MainActivity.this).execute();
+                    break;
+                case 2:
+                    new TinyurlShortUrl(urlText).execute();
+                    break;
+                default:
+                    new GoogleShortUrl(urlText,MainActivity.this).execute();
+            }
 
         }
     }

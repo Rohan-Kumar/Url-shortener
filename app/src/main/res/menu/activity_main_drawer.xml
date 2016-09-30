@@ -6,6 +6,11 @@
             android:id="@+id/nav_history"
             android:icon="@drawable/ic_history_black_24dp"
             android:title="History" />
+        <item
+            android:id="@+id/default_api"
+            android:icon="@drawable/default_api"
+            android:title="Short Url Method"
+            />
     </group>
 
     <item android:title="Communicate">
