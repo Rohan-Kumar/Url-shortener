@@ -164,9 +164,10 @@ public class MainActivity extends AppCompatActivity
             longUrl.requestFocus();
             card.setVisibility(View.INVISIBLE);
         } else {
+            urlText = urlText.replaceAll(" ","");
             if (!urlText.startsWith("http"))
                 urlText = "http://" + urlText;
-            new BitlyShortUrl(urlText, MainActivity.this).execute();
+            new TinyurlShortUrl(urlText).execute();
 
         }
     }
