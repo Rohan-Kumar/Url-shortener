@@ -1,6 +1,8 @@
 package com.urlshortner;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +16,8 @@ import java.util.ArrayList;
  */
 public class RVAdapter extends RecyclerView.Adapter<RVAdapter.Holder> {
 
-    Context context;
-    ArrayList<String> urlHistory;
+    private Context context;
+    private ArrayList<String> urlHistory;
 
     RVAdapter(Context context, ArrayList<String> urlHistory){
         this.context = context;
@@ -28,8 +30,15 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.Holder> {
     }
 
     @Override
-    public void onBindViewHolder(Holder holder, int position) {
+    public void onBindViewHolder(Holder holder, final int position) {
         holder.url.setText(urlHistory.get(position));
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(urlHistory.get(position)));
+                context.startActivity(intent);
+            }
+        });
     }
 
     @Override
