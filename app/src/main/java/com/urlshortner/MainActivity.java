@@ -104,7 +104,6 @@ public class MainActivity extends AppCompatActivity
         card = (CardView) findViewById(R.id.card);
         card.setVisibility(View.INVISIBLE);
 
-
         db = openOrCreateDatabase("UrlShortener", MODE_PRIVATE, null);
         db.execSQL("CREATE TABLE IF NOT EXISTS url(URL VARCHAR);");
     }
@@ -165,7 +164,10 @@ public class MainActivity extends AppCompatActivity
             longUrl.requestFocus();
             card.setVisibility(View.INVISIBLE);
         } else {
-            new GoogleShortUrl(urlText).execute();
+            if (!urlText.startsWith("http"))
+                urlText = "http://" + urlText;
+            new BitlyShortUrl(urlText, MainActivity.this).execute();
+
         }
     }
 

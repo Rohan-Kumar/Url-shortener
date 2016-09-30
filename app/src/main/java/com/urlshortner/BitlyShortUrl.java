@@ -18,19 +18,21 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.net.URLEncoder;
 
 /**
- * Created by Rohan on 8/25/2016.
+ * Created by Rohan on 9/30/2016.
  */
-public class GoogleShortUrl extends AsyncTask<Void, Void, Void> {
+
+public class BitlyShortUrl extends AsyncTask<Void, Void, Void> {
 
     private static final String TAG = "UrlShortner";
     private String Response = "";
     private String longUrl = "";
     private String shortUrl = "";
-    private Context context;
+    Context context;
 
-    GoogleShortUrl(String url,Context ctx) {
+    BitlyShortUrl(String url,Context ctx) {
         longUrl = url;
         context = ctx;
 
@@ -41,21 +43,15 @@ public class GoogleShortUrl extends AsyncTask<Void, Void, Void> {
 
         URL url;
         try {
-            url = new URL("https://www.googleapis.com/urlshortener/v1/url?key="+context.getResources().getString(R.string.googleApiKey));
+            url = new URL("https://api-ssl.bitly.com/v3/shorten?access_token="+context.getResources().getString(R.string.bitlyAccessToken)+"&longUrl="+ URLEncoder.encode(longUrl,"utf-8"));
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
-            httpURLConnection.setDoInput(true);
-            httpURLConnection.setDoOutput(true);
-            httpURLConnection.setRequestMethod("POST");
-            httpURLConnection.setRequestProperty("Content-Type", "application/json");
+            Log.d(TAG, "https://api-ssl.bitly.com/v3/shorten?access_token="+context.getResources().getString(R.string.bitlyAccessToken)+"&longUrl="+ URLEncoder.encode(longUrl,"utf-8"));
 
-            OutputStream os = httpURLConnection.getOutputStream();
-
-            BufferedWriter mBufferedWriter = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-            mBufferedWriter.write("{\"longUrl\":\"" + longUrl + "\"}");
-            mBufferedWriter.flush();
-            mBufferedWriter.close();
-            os.close();
+//            httpURLConnection.setDoInput(true);
+//            httpURLConnection.setDoOutput(true);
+//            httpURLConnection.setRequestMethod("GET");
+//            httpURLConnection.setRequestProperty("Content-Type", "application/json");
 
             httpURLConnection.connect();
             BufferedReader mBufferedInputStream = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
@@ -84,7 +80,8 @@ public class GoogleShortUrl extends AsyncTask<Void, Void, Void> {
         Log.d(TAG, "parseResponse: " + Response);
         try {
             JSONObject jsonObject = new JSONObject(Response);
-            shortUrl = jsonObject.getString("id");
+            JSONObject data = jsonObject.getJSONObject("data");
+            shortUrl = data.getString("url");
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -98,3 +95,4 @@ public class GoogleShortUrl extends AsyncTask<Void, Void, Void> {
         MainActivity.showShortUrl(shortUrl);
     }
 }
+
