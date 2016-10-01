@@ -7,8 +7,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -18,12 +21,24 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -33,7 +48,9 @@ public class MainActivity extends AppCompatActivity
     static LinearLayout copy, share, qr;
     static CardView card;
     static SQLiteDatabase db;
-    private String[] api = {"Google url shortener","Bitly url shortener","Tiny url shortener"};
+    private String[] api = {"Google url shortener", "Bitly url shortener", "Tiny url shortener"};
+    ImageView qrImage;
+    Bitmap bmp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,11 +108,72 @@ public class MainActivity extends AppCompatActivity
         qr.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, QRActivity.class);
-                intent.putExtra("shortUrl", shortUrlTV.getText().toString());
-                startActivity(intent);
+                generateQR(shortUrlTV.getText().toString());
             }
         });
+    }
+
+    private void generateQR(final String shortUrl) {
+        QRCodeWriter writer = new QRCodeWriter();
+        try {
+            BitMatrix bitMatrix = writer.encode(shortUrl, BarcodeFormat.QR_CODE, 512, 512);
+            int width = bitMatrix.getWidth();
+            int height = bitMatrix.getHeight();
+            bmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
+                    bmp.setPixel(x, y, bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                }
+            }
+            qrImage.setImageBitmap(bmp);
+
+        } catch (WriterException e) {
+            e.printStackTrace();
+        }
+
+        qrImage.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (bmp != null) {
+
+                    AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                    alert.setTitle("SAVE??");
+                    alert.setMessage("Do you want to save the generated QR code on to your device?");
+                    alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            try {
+                                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                                bmp.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+                                /*File file = new File(Environment.getExternalStorageDirectory()
+                                        + File.separator + "Pictures/QR");
+                                if (!file.exists()) {
+                                    file.mkdirs();
+                                }*/
+                                File f = new File(Environment.getExternalStorageDirectory()
+                                        + File.separator + "Pictures" /*+ File.separator + "QR" */ + File.separator + shortUrl + ".jpg");
+                                f.createNewFile();
+                                FileOutputStream fo = new FileOutputStream(f);
+                                fo.write(bytes.toByteArray());
+                                fo.flush();
+                                fo.close();
+                                Toast.makeText(MainActivity.this, "Successfully stored", Toast.LENGTH_SHORT).show();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                Log.d("Error", "catch");
+                            }
+
+                        }
+
+                    });
+                    alert.setNegativeButton("No", null);
+                    alert.show();
+                }
+
+                return true;
+            }
+        });
+
     }
 
     private void init() {
@@ -106,6 +184,7 @@ public class MainActivity extends AppCompatActivity
         qr = (LinearLayout) findViewById(R.id.qr);
         card = (CardView) findViewById(R.id.card);
         card.setVisibility(View.INVISIBLE);
+        qrImage = (ImageView) findViewById(R.id.qrImage);
 
         db = openOrCreateDatabase("UrlShortener", MODE_PRIVATE, null);
         db.execSQL("CREATE TABLE IF NOT EXISTS url(URL VARCHAR);");
@@ -131,18 +210,18 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_history) {
             Intent intent = new Intent(MainActivity.this, HistoryActivity.class);
             startActivity(intent);
-        }else if (id == R.id.default_api){
+        } else if (id == R.id.default_api) {
             AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-            alert.setSingleChoiceItems(api, getSharedPreferences("URL",Context.MODE_PRIVATE).getInt("api",0), new DialogInterface.OnClickListener() {
+            alert.setSingleChoiceItems(api, getSharedPreferences("URL", Context.MODE_PRIVATE).getInt("api", 0), new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    getSharedPreferences("URL",Context.MODE_PRIVATE).edit().putInt("api",which).apply();
+                    getSharedPreferences("URL", Context.MODE_PRIVATE).edit().putInt("api", which).apply();
                     dialog.dismiss();
                 }
             });
             alert.setTitle("Select shortener method");
             alert.show();
-        }else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_share) {
             Intent sendIntent = new Intent();
             sendIntent.setAction(Intent.ACTION_SEND);
             sendIntent.putExtra(Intent.EXTRA_TEXT, "Hello!\nCheck this amazing app to shorten your url!\nDownload it at http://play.google.com/store/apps/details?id=" + getBaseContext().getPackageName());
@@ -178,22 +257,22 @@ public class MainActivity extends AppCompatActivity
             longUrl.requestFocus();
             card.setVisibility(View.INVISIBLE);
         } else {
-            urlText = urlText.replaceAll(" ","");
+            urlText = urlText.replaceAll(" ", "");
             if (!urlText.startsWith("http"))
                 urlText = "http://" + urlText;
-            int which = getSharedPreferences("URL",Context.MODE_PRIVATE).getInt("api",0);
-            switch (which){
+            int which = getSharedPreferences("URL", Context.MODE_PRIVATE).getInt("api", 0);
+            switch (which) {
                 case 0:
-                    new GoogleShortUrl(urlText,MainActivity.this).execute();
+                    new GoogleShortUrl(urlText, MainActivity.this).execute();
                     break;
                 case 1:
-                    new BitlyShortUrl(urlText,MainActivity.this).execute();
+                    new BitlyShortUrl(urlText, MainActivity.this).execute();
                     break;
                 case 2:
                     new TinyurlShortUrl(urlText).execute();
                     break;
                 default:
-                    new GoogleShortUrl(urlText,MainActivity.this).execute();
+                    new GoogleShortUrl(urlText, MainActivity.this).execute();
             }
 
         }

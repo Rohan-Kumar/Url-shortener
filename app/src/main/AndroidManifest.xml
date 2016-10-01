@@ -22,7 +22,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".HistoryActivity" />
-        <activity android:name=".QRActivity"></activity>
     </application>
 
 </manifest>
