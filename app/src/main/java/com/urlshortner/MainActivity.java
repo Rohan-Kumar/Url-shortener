@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -68,6 +70,8 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        TextView navTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.navTextView);
+        navTextView.setText(api[getSharedPreferences("URL", Context.MODE_PRIVATE).getInt("api", 0)]);
 
         init();
 
@@ -108,12 +112,14 @@ public class MainActivity extends AppCompatActivity
         qr.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                qrImage.setVisibility(View.VISIBLE);
                 generateQR(shortUrlTV.getText().toString());
             }
         });
     }
 
     private void generateQR(final String shortUrl) {
+        Toast.makeText(MainActivity.this, "Long press the QR to save it...", Toast.LENGTH_SHORT).show();
         QRCodeWriter writer = new QRCodeWriter();
         try {
             BitMatrix bitMatrix = writer.encode(shortUrl, BarcodeFormat.QR_CODE, 512, 512);
@@ -185,6 +191,7 @@ public class MainActivity extends AppCompatActivity
         card = (CardView) findViewById(R.id.card);
         card.setVisibility(View.INVISIBLE);
         qrImage = (ImageView) findViewById(R.id.qrImage);
+        qrImage.setVisibility(View.INVISIBLE);
 
         db = openOrCreateDatabase("UrlShortener", MODE_PRIVATE, null);
         db.execSQL("CREATE TABLE IF NOT EXISTS url(URL VARCHAR);");
@@ -216,6 +223,9 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     getSharedPreferences("URL", Context.MODE_PRIVATE).edit().putInt("api", which).apply();
+                    NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+                    TextView navTextView = (TextView) navigationView.getHeaderView(0).findViewById(R.id.navTextView);
+                    navTextView.setText(api[getSharedPreferences("URL", Context.MODE_PRIVATE).getInt("api", 0)]);
                     dialog.dismiss();
                 }
             });
@@ -247,34 +257,39 @@ public class MainActivity extends AppCompatActivity
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
+
         return true;
     }
 
     public void shortUrl(View view) {
-        String urlText = longUrl.getText().toString();
-        if (urlText.equals("") || urlText == null) {
-            longUrl.setError("Cannot be empty!");
-            longUrl.requestFocus();
-            card.setVisibility(View.INVISIBLE);
-        } else {
-            urlText = urlText.replaceAll(" ", "");
-            if (!urlText.startsWith("http"))
-                urlText = "http://" + urlText;
-            int which = getSharedPreferences("URL", Context.MODE_PRIVATE).getInt("api", 0);
-            switch (which) {
-                case 0:
-                    new GoogleShortUrl(urlText, MainActivity.this).execute();
-                    break;
-                case 1:
-                    new BitlyShortUrl(urlText, MainActivity.this).execute();
-                    break;
-                case 2:
-                    new TinyurlShortUrl(urlText).execute();
-                    break;
-                default:
-                    new GoogleShortUrl(urlText, MainActivity.this).execute();
-            }
+        if (!hasConnection(MainActivity.this))
+            Toast.makeText(MainActivity.this, "Please make sure you have network connection...", Toast.LENGTH_SHORT).show();
+        else {
+            String urlText = longUrl.getText().toString();
+            if (urlText.equals("") || urlText == null) {
+                longUrl.setError("Cannot be empty!");
+                longUrl.requestFocus();
+                card.setVisibility(View.INVISIBLE);
+            } else {
+                urlText = urlText.replaceAll(" ", "");
+                if (!urlText.startsWith("http"))
+                    urlText = "http://" + urlText;
+                int which = getSharedPreferences("URL", Context.MODE_PRIVATE).getInt("api", 0);
+                switch (which) {
+                    case 0:
+                        new GoogleShortUrl(urlText, MainActivity.this).execute();
+                        break;
+                    case 1:
+                        new BitlyShortUrl(urlText, MainActivity.this).execute();
+                        break;
+                    case 2:
+                        new TinyurlShortUrl(urlText).execute();
+                        break;
+                    default:
+                        new GoogleShortUrl(urlText, MainActivity.this).execute();
+                }
 
+            }
         }
     }
 
@@ -286,4 +301,30 @@ public class MainActivity extends AppCompatActivity
         db.execSQL(query);
 
     }
+
+    // checking if phone is connected to internet
+    private boolean hasConnection(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo wifiNetwork = cm
+                .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (wifiNetwork != null && wifiNetwork.isConnected()) {
+            return true;
+        }
+
+        NetworkInfo mobileNetwork = cm
+                .getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        if (mobileNetwork != null && mobileNetwork.isConnected()) {
+            return true;
+        }
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        if (activeNetwork != null && activeNetwork.isConnected()) {
+            return true;
+        }
+
+        return false;
+    }
+
 }
