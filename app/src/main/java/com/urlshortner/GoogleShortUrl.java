@@ -3,6 +3,7 @@ package com.urlshortner;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,6 +30,7 @@ public class GoogleShortUrl extends AsyncTask<Void, Void, Void> {
     private String longUrl = "";
     private String shortUrl = "";
     private Context context;
+    private boolean isValid = false;
 
     GoogleShortUrl(String url,Context ctx) {
         longUrl = url;
@@ -85,9 +87,10 @@ public class GoogleShortUrl extends AsyncTask<Void, Void, Void> {
         try {
             JSONObject jsonObject = new JSONObject(Response);
             shortUrl = jsonObject.getString("id");
-
+            isValid = true;
         } catch (JSONException e) {
             e.printStackTrace();
+            isValid = false;
         }
 
     }
@@ -95,6 +98,9 @@ public class GoogleShortUrl extends AsyncTask<Void, Void, Void> {
     @Override
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
-        MainActivity.showShortUrl(shortUrl);
+        if (isValid)
+            MainActivity.showShortUrl(shortUrl);
+        else
+            Toast.makeText(context, "This url is not accepted...", Toast.LENGTH_SHORT).show();
     }
 }

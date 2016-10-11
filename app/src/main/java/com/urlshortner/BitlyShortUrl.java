@@ -3,16 +3,14 @@ package com.urlshortner;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -30,9 +28,10 @@ public class BitlyShortUrl extends AsyncTask<Void, Void, Void> {
     private String Response = "";
     private String longUrl = "";
     private String shortUrl = "";
-    Context context;
+    private Context context;
+    private boolean isValid = false;
 
-    BitlyShortUrl(String url,Context ctx) {
+    BitlyShortUrl(String url, Context ctx) {
         longUrl = url;
         context = ctx;
 
@@ -43,10 +42,10 @@ public class BitlyShortUrl extends AsyncTask<Void, Void, Void> {
 
         URL url;
         try {
-            url = new URL("https://api-ssl.bitly.com/v3/shorten?access_token="+context.getResources().getString(R.string.bitlyAccessToken)+"&longUrl="+ URLEncoder.encode(longUrl,"utf-8"));
+            url = new URL("https://api-ssl.bitly.com/v3/shorten?access_token=" + context.getResources().getString(R.string.bitlyAccessToken) + "&longUrl=" + URLEncoder.encode(longUrl, "utf-8"));
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
-            Log.d(TAG, "https://api-ssl.bitly.com/v3/shorten?access_token="+context.getResources().getString(R.string.bitlyAccessToken)+"&longUrl="+ URLEncoder.encode(longUrl,"utf-8"));
+            Log.d(TAG, "https://api-ssl.bitly.com/v3/shorten?access_token=" + context.getResources().getString(R.string.bitlyAccessToken) + "&longUrl=" + URLEncoder.encode(longUrl, "utf-8"));
 
 //            httpURLConnection.setDoInput(true);
 //            httpURLConnection.setDoOutput(true);
@@ -80,8 +79,13 @@ public class BitlyShortUrl extends AsyncTask<Void, Void, Void> {
         Log.d(TAG, "parseResponse: " + Response);
         try {
             JSONObject jsonObject = new JSONObject(Response);
-            JSONObject data = jsonObject.getJSONObject("data");
-            shortUrl = data.getString("url");
+            if (jsonObject.getInt("status_code") == 200) {
+                JSONObject data = jsonObject.getJSONObject("data");
+                shortUrl = data.getString("url");
+                isValid = true;
+            } else {
+                isValid = false;
+            }
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -92,7 +96,10 @@ public class BitlyShortUrl extends AsyncTask<Void, Void, Void> {
     @Override
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
-        MainActivity.showShortUrl(shortUrl);
+        if (isValid)
+            MainActivity.showShortUrl(shortUrl);
+        else
+            Toast.makeText(context, "This url is not accepted...", Toast.LENGTH_SHORT).show();
     }
 }
 

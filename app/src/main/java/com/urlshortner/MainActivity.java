@@ -1,11 +1,13 @@
 package com.urlshortner;
 
+import android.Manifest;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -14,7 +16,10 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -112,11 +117,36 @@ public class MainActivity extends AppCompatActivity
         qr.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                qrImage.setVisibility(View.VISIBLE);
-                generateQR(shortUrlTV.getText().toString());
+                requestPermission();
             }
         });
     }
+
+    void requestPermission() {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 12345);
+        else {
+            qrImage.setVisibility(View.VISIBLE);
+            generateQR(shortUrlTV.getText().toString());
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 12345) {
+            //If permission is granted
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                qrImage.setVisibility(View.VISIBLE);
+                generateQR(shortUrlTV.getText().toString());
+            } else {
+                //Displaying another toast if permission is not granted
+                Toast.makeText(this, "Please grant permission to save the file", Toast.LENGTH_LONG).show();
+                finish();
+            }
+        }
+    }
+
 
     private void generateQR(final String shortUrl) {
         Toast.makeText(MainActivity.this, "Long press the QR to save it...", Toast.LENGTH_SHORT).show();
@@ -156,14 +186,17 @@ public class MainActivity extends AppCompatActivity
                                 if (!file.exists()) {
                                     file.mkdirs();
                                 }*/
+                                String urlArray[] = shortUrl.split("/");
+                                String urlString = urlArray[urlArray.length-1];
                                 File f = new File(Environment.getExternalStorageDirectory()
-                                        + File.separator + "Pictures" /*+ File.separator + "QR" */ + File.separator + shortUrl + ".jpg");
-                                f.createNewFile();
+                                        + File.separator + "Pictures" /*+ File.separator + "QR" */ + File.separator + urlString + ".jpg");
+                                boolean create = f.createNewFile();
+                                Log.d("TAG", "onClick: "+create);
                                 FileOutputStream fo = new FileOutputStream(f);
                                 fo.write(bytes.toByteArray());
                                 fo.flush();
                                 fo.close();
-                                Toast.makeText(MainActivity.this, "Successfully stored", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this, "Saved in Pictures folder...", Toast.LENGTH_SHORT).show();
                             } catch (IOException e) {
                                 e.printStackTrace();
                                 Log.d("Error", "catch");
@@ -262,6 +295,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void shortUrl(View view) {
+        card.setVisibility(View.INVISIBLE);
+        qrImage.setVisibility(View.INVISIBLE);
         if (!hasConnection(MainActivity.this))
             Toast.makeText(MainActivity.this, "Please make sure you have network connection...", Toast.LENGTH_SHORT).show();
         else {
@@ -269,7 +304,6 @@ public class MainActivity extends AppCompatActivity
             if (urlText.equals("") || urlText == null) {
                 longUrl.setError("Cannot be empty!");
                 longUrl.requestFocus();
-                card.setVisibility(View.INVISIBLE);
             } else {
                 urlText = urlText.replaceAll(" ", "");
                 if (!urlText.startsWith("http"))
