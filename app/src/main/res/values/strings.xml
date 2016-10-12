@@ -6,7 +6,7 @@
 
     <string name="action_settings">Settings</string>
     
-    <string name="bitlyAccessToken">65f69230dfabe2882d7145d7a3aefe599af89630</string>
-    <string name="googleApiKey">AIzaSyCG3qtD9714DyIZrRjpyrdls9SZoI_tNyI</string>
+    <string name="bitlyAccessToken"></string>
+    <string name="googleApiKey"></string>
 
 </resources>
