@@ -8,11 +8,26 @@
     android:elevation="@dimen/cardview_default_elevation"
     card_view:cardCornerRadius="@dimen/cardview_default_radius">
 
-    <TextView
-        android:id="@+id/url"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:text="sldifvnadkj" />
+        android:layout_height="match_parent">
 
+        <TextView
+            android:id="@+id/url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:paddingLeft="25dp"
+            android:textSize="25dp"
+            android:text="goo.gl/m4AR" />
+
+        <TextView
+            android:id="@+id/longurl"
+            android:layout_below="@+id/url"
+            android:textSize="15dp"
+            android:layout_margin="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="http://google.com" />
+    </RelativeLayout>
 </android.support.v7.widget.CardView>

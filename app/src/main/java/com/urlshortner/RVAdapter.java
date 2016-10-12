@@ -18,10 +18,12 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.Holder> {
 
     private Context context;
     private ArrayList<String> urlHistory;
+    private ArrayList<String> longurlHistory;
 
-    RVAdapter(Context context, ArrayList<String> urlHistory){
+    RVAdapter(Context context, ArrayList<String> urlHistory, ArrayList<String> longurlHistory){
         this.context = context;
         this.urlHistory = urlHistory;
+        this.longurlHistory = longurlHistory;
     }
 
     @Override
@@ -32,6 +34,7 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.Holder> {
     @Override
     public void onBindViewHolder(Holder holder, final int position) {
         holder.url.setText(urlHistory.get(position));
+        holder.longurl.setText(longurlHistory.get(position));
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -48,10 +51,11 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.Holder> {
 
     class Holder extends RecyclerView.ViewHolder{
 
-        TextView url;
+        TextView url,longurl;
         public Holder(View itemView) {
             super(itemView);
             url = (TextView) itemView.findViewById(R.id.url);
+            longurl = (TextView) itemView.findViewById(R.id.longurl);
         }
     }
 }

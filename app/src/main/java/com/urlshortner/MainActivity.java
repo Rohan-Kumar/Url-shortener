@@ -50,7 +50,7 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    EditText longUrl;
+    static EditText longUrl;
     static TextView shortUrlTV;
     static LinearLayout copy, share, qr;
     static CardView card;
@@ -227,7 +227,7 @@ public class MainActivity extends AppCompatActivity
         qrImage.setVisibility(View.INVISIBLE);
 
         db = openOrCreateDatabase("UrlShortener", MODE_PRIVATE, null);
-        db.execSQL("CREATE TABLE IF NOT EXISTS url(URL VARCHAR);");
+        db.execSQL("CREATE TABLE IF NOT EXISTS url(URL VARCHAR, LONG_URL VARCHAR);");
     }
 
     @Override
@@ -331,7 +331,7 @@ public class MainActivity extends AppCompatActivity
         card.setVisibility(View.VISIBLE);
         shortUrlTV.setText(Html.fromHtml("<u><font color=\"#00C9FF\">" + shortUrl + "</font></u>"));
 
-        String query = "INSERT INTO url VALUES('" + shortUrlTV.getText().toString() + "')";
+        String query = "INSERT INTO url VALUES('" + shortUrlTV.getText().toString() + "','"+longUrl.getText().toString()+"')";
         db.execSQL(query);
 
     }

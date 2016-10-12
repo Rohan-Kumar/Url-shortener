@@ -17,6 +17,7 @@ public class HistoryActivity extends AppCompatActivity {
     RVAdapter adapter;
     SQLiteDatabase db;
     ArrayList<String> urlHistory = new ArrayList<>();
+    ArrayList<String> longurlHistory = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +37,9 @@ public class HistoryActivity extends AppCompatActivity {
 
             do {
                 urlHistory.add(c.getString(0));
+                longurlHistory.add(c.getString(1));
             } while (c.moveToNext());
-            adapter = new RVAdapter(HistoryActivity.this,urlHistory);
+            adapter = new RVAdapter(HistoryActivity.this,urlHistory,longurlHistory);
             recyclerView.setAdapter(adapter);
 
         } catch (CursorIndexOutOfBoundsException e){
