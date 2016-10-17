@@ -1,6 +1,7 @@
 package com.urlshortner;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -187,11 +188,11 @@ public class MainActivity extends AppCompatActivity
                                     file.mkdirs();
                                 }*/
                                 String urlArray[] = shortUrl.split("/");
-                                String urlString = urlArray[urlArray.length-1];
+                                String urlString = urlArray[urlArray.length - 1];
                                 File f = new File(Environment.getExternalStorageDirectory()
                                         + File.separator + "Pictures" /*+ File.separator + "QR" */ + File.separator + urlString + ".jpg");
                                 boolean create = f.createNewFile();
-                                Log.d("TAG", "onClick: "+create);
+                                Log.d("TAG", "onClick: " + create);
                                 FileOutputStream fo = new FileOutputStream(f);
                                 fo.write(bytes.toByteArray());
                                 fo.flush();
@@ -216,6 +217,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void init() {
+
+        if (!isMyServiceRunning(MyService.class)) {
+            Intent startServiceIntent = new Intent(MainActivity.this, MyService.class);
+            startService(startServiceIntent);
+        }
+
+        String copiedText = getIntent().getStringExtra("copied");
+
         longUrl = (EditText) findViewById(R.id.LongUrl);
         shortUrlTV = (TextView) findViewById(R.id.ShortUrl);
         copy = (LinearLayout) findViewById(R.id.copy);
@@ -228,6 +237,13 @@ public class MainActivity extends AppCompatActivity
 
         db = openOrCreateDatabase("UrlShortener", MODE_PRIVATE, null);
         db.execSQL("CREATE TABLE IF NOT EXISTS url(URL VARCHAR, LONG_URL VARCHAR);");
+
+        if (copiedText != null) {
+            longUrl.setText(copiedText);
+            shortUrl(findViewById(R.id.getShortUrl));
+
+        }
+
     }
 
     @Override
@@ -331,7 +347,7 @@ public class MainActivity extends AppCompatActivity
         card.setVisibility(View.VISIBLE);
         shortUrlTV.setText(Html.fromHtml("<u><font color=\"#00C9FF\">" + shortUrl + "</font></u>"));
 
-        String query = "INSERT INTO url VALUES('" + shortUrlTV.getText().toString() + "','"+longUrl.getText().toString()+"')";
+        String query = "INSERT INTO url VALUES('" + shortUrlTV.getText().toString() + "','" + longUrl.getText().toString() + "')";
         db.execSQL(query);
 
     }
@@ -361,4 +377,13 @@ public class MainActivity extends AppCompatActivity
         return false;
     }
 
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
